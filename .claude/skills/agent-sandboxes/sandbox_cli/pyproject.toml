@@ -1,0 +1,30 @@
+[project]
+name = "sandbox-cli"
+version = "0.1.0"
+description = "E2B Sandbox CLI - Control sandboxes from the command line"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "e2b>=2.6.4",
+    "click>=8.1.7",
+    "python-dotenv>=1.0.0",
+    "rich>=13.7.0",
+]
+
+[project.scripts]
+sbx = "src.main:cli"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "playwright>=1.56.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

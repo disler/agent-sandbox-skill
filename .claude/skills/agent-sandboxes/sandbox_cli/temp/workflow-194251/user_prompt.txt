@@ -1,0 +1,9 @@
+Build a simple Task Manager application with full CRUD operations using SQLite.
+
+Requirements:
+- Users should be able to create, read, update, and delete tasks
+- Each task should have: title, description, status (pending/in-progress/completed), and created date
+- Frontend should have a clean, modern UI with a form to add tasks and a list to display them
+- Backend should provide RESTful API endpoints for all CRUD operations
+- Use SQLite database to persist task data
+- Include proper error handling and validation

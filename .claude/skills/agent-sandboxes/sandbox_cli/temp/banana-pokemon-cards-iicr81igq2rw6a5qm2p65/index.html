@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Pokémon Evolution</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+            font-size: 3em;
+        }
+        .cards-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+        }
+    </style>
+</head>
+<body>
+    <h1>🍌 Banana Pokémon Evolution Line 🍌</h1>
+    <div class="cards-container">
+        <!-- Card 1: Bananito -->
+        <div class="card">
+            <svg width="300" height="420" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+                <!-- Card background -->
+                <rect width="300" height="420" rx="15" fill="#FFF9C4"/>
+                
+                <!-- Card border -->
+                <rect x="5" y="5" width="290" height="410" rx="12" fill="none" stroke="#F9A825" stroke-width="3"/>
+                
+                <!-- Header -->
+                <rect x="15" y="15" width="270" height="40" rx="8" fill="#FFE082"/>
+                <text x="150" y="43" font-size="24" font-weight="bold" text-anchor="middle" fill="#F57F17">Bananito</text>
+                
+                <!-- HP -->
+                <circle cx="250" cy="35" r="18" fill="#F44336"/>
+                <text x="250" y="42" font-size="16" font-weight="bold" text-anchor="middle" fill="white">30</text>
+                
+                <!-- Image area -->
+                <rect x="15" y="65" width="270" height="200" rx="8" fill="#FFF59D"/>
+                
+                <!-- Baby Banana Pokemon -->
+                <ellipse cx="150" cy="145" rx="50" ry="65" fill="#FFD54F"/>
+                <ellipse cx="150" cy="155" rx="45" ry="55" fill="#FFEB3B"/>
+                <circle cx="140" cy="140" r="5" fill="#000"/>
+                <circle cx="160" cy="140" r="5" fill="#000"/>
+                <path d="M 140 155 Q 150 160 160 155" stroke="#000" stroke-width="2" fill="none"/>
+                <ellipse cx="135" cy="150" rx="8" ry="6" fill="#FF9800" opacity="0.5"/>
+                <ellipse cx="165" cy="150" rx="8" ry="6" fill="#FF9800" opacity="0.5"/>
+                
+                <!-- Peel on top -->
+                <path d="M 150 100 Q 145 85 155 80 Q 160 85 150 100" fill="#8BC34A"/>
+                
+                <!-- Stage indicator -->
+                <text x="150" y="255" font-size="14" font-style="italic" text-anchor="middle" fill="#827717">⭐ Basic</text>
+                
+                <!-- Type -->
+                <rect x="15" y="275" width="270" height="35" rx="8" fill="#FFE082"/>
+                <text x="30" y="297" font-size="14" font-weight="bold" fill="#F57F17">Type:</text>
+                <rect x="80" y="283" width="80" height="22" rx="11" fill="#8BC34A"/>
+                <text x="120" y="299" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Grass</text>
+                <rect x="170" y="283" width="80" height="22" rx="11" fill="#FFEB3B"/>
+                <text x="210" y="299" font-size="12" font-weight="bold" text-anchor="middle" fill="#827717">Food</text>
+                
+                <!-- Attack -->
+                <rect x="15" y="320" width="270" height="50" rx="8" fill="#FFE082"/>
+                <text x="30" y="340" font-size="14" font-weight="bold" fill="#F57F17">⚡ Peel Toss</text>
+                <circle cx="260" cy="345" r="15" fill="#F57F17"/>
+                <text x="260" y="351" font-size="14" font-weight="bold" text-anchor="middle" fill="white">15</text>
+                <text x="30" y="360" font-size="11" fill="#827717">Slips opponent, may confuse!</text>
+                
+                <!-- Footer -->
+                <text x="150" y="395" font-size="10" text-anchor="middle" fill="#827717">No. 001 • Length: 0.3m • Weight: 4kg</text>
+            </svg>
+        </div>
+
+        <!-- Card 2: Bananachu -->
+        <div class="card">
+            <svg width="300" height="420" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+                <!-- Card background -->
+                <rect width="300" height="420" rx="15" fill="#FFF9C4"/>
+                
+                <!-- Card border -->
+                <rect x="5" y="5" width="290" height="410" rx="12" fill="none" stroke="#F9A825" stroke-width="3"/>
+                
+                <!-- Header -->
+                <rect x="15" y="15" width="270" height="40" rx="8" fill="#FFE082"/>
+                <text x="150" y="43" font-size="24" font-weight="bold" text-anchor="middle" fill="#F57F17">Bananachu</text>
+                
+                <!-- HP -->
+                <circle cx="250" cy="35" r="18" fill="#F44336"/>
+                <text x="250" y="42" font-size="16" font-weight="bold" text-anchor="middle" fill="white">70</text>
+                
+                <!-- Image area -->
+                <rect x="15" y="65" width="270" height="200" rx="8" fill="#FFF59D"/>
+                
+                <!-- Evolved Banana Pokemon -->
+                <ellipse cx="150" cy="150" rx="60" ry="75" fill="#FFD54F"/>
+                <ellipse cx="150" cy="160" rx="55" ry="65" fill="#FFEB3B"/>
+                <circle cx="140" cy="145" r="6" fill="#000"/>
+                <circle cx="160" cy="145" r="6" fill="#000"/>
+                <path d="M 135 160 Q 150 168 165 160" stroke="#000" stroke-width="3" fill="none"/>
+                <ellipse cx="135" cy="155" rx="10" ry="8" fill="#FF9800" opacity="0.6"/>
+                <ellipse cx="165" cy="155" rx="10" ry="8" fill="#FF9800" opacity="0.6"/>
+                
+                <!-- Arms -->
+                <ellipse cx="100" cy="165" rx="15" ry="30" fill="#FFEB3B"/>
+                <ellipse cx="200" cy="165" rx="15" ry="30" fill="#FFEB3B"/>
+                
+                <!-- Peel on top -->
+                <path d="M 150 90 Q 140 70 150 65 Q 160 70 150 90" fill="#8BC34A"/>
+                <path d="M 150 65 L 145 55 L 150 50 L 155 55 Z" fill="#4CAF50"/>
+                
+                <!-- Lightning bolt -->
+                <path d="M 120 180 L 125 195 L 120 195 L 127 210 L 135 190 L 128 190 Z" fill="#FFEB3B" stroke="#FDD835" stroke-width="1"/>
+                
+                <!-- Stage indicator -->
+                <text x="150" y="255" font-size="14" font-style="italic" text-anchor="middle" fill="#827717">⭐⭐ Stage 1</text>
+                
+                <!-- Type -->
+                <rect x="15" y="275" width="270" height="35" rx="8" fill="#FFE082"/>
+                <text x="30" y="297" font-size="14" font-weight="bold" fill="#F57F17">Type:</text>
+                <rect x="80" y="283" width="80" height="22" rx="11" fill="#8BC34A"/>
+                <text x="120" y="299" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Grass</text>
+                <rect x="170" y="283" width="80" height="22" rx="11" fill="#FFEB3B"/>
+                <text x="210" y="299" font-size="12" font-weight="bold" text-anchor="middle" fill="#827717">Food</text>
+                
+                <!-- Attack -->
+                <rect x="15" y="320" width="270" height="50" rx="8" fill="#FFE082"/>
+                <text x="30" y="340" font-size="14" font-weight="bold" fill="#F57F17">⚡ Banana Bolt</text>
+                <circle cx="260" cy="345" r="15" fill="#F57F17"/>
+                <text x="260" y="351" font-size="14" font-weight="bold" text-anchor="middle" fill="white">40</text>
+                <text x="30" y="360" font-size="11" fill="#827717">Electric banana attack!</text>
+                
+                <!-- Footer -->
+                <text x="150" y="395" font-size="10" text-anchor="middle" fill="#827717">No. 002 • Length: 0.8m • Weight: 12kg</text>
+            </svg>
+        </div>
+
+        <!-- Card 3: Bananazard -->
+        <div class="card">
+            <svg width="300" height="420" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+                <!-- Card background -->
+                <rect width="300" height="420" rx="15" fill="#FFF9C4"/>
+                
+                <!-- Card border -->
+                <rect x="5" y="5" width="290" height="410" rx="12" fill="none" stroke="#F9A825" stroke-width="3"/>
+                
+                <!-- Header with holographic effect -->
+                <defs>
+                    <linearGradient id="holoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FF6347;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect x="15" y="15" width="270" height="40" rx="8" fill="url(#holoGrad)"/>
+                <text x="150" y="43" font-size="24" font-weight="bold" text-anchor="middle" fill="white">Bananazard</text>
+                
+                <!-- HP -->
+                <circle cx="245" cy="35" r="20" fill="#D32F2F"/>
+                <text x="245" y="42" font-size="16" font-weight="bold" text-anchor="middle" fill="white">140</text>
+                
+                <!-- Image area -->
+                <rect x="15" y="65" width="270" height="200" rx="8" fill="#FFF59D"/>
+                
+                <!-- Mega Banana Pokemon -->
+                <ellipse cx="150" cy="155" rx="70" ry="85" fill="#FFD54F"/>
+                <ellipse cx="150" cy="165" rx="65" ry="75" fill="#FFEB3B"/>
+                <circle cx="138" cy="150" r="7" fill="#000"/>
+                <circle cx="162" cy="150" r="7" fill="#000"/>
+                <circle cx="138" cy="150" r="3" fill="#fff"/>
+                <circle cx="162" cy="150" r="3" fill="#fff"/>
+                
+                <!-- Fierce mouth -->
+                <path d="M 130 170 Q 150 180 170 170" stroke="#000" stroke-width="3" fill="none"/>
+                <path d="M 140 173 L 143 178" stroke="#fff" stroke-width="2"/>
+                <path d="M 157 173 L 160 178" stroke="#fff" stroke-width="2"/>
+                
+                <!-- Strong arms -->
+                <ellipse cx="90" cy="170" rx="18" ry="35" fill="#FFEB3B"/>
+                <ellipse cx="210" cy="170" rx="18" ry="35" fill="#FFEB3B"/>
+                <circle cx="90" cy="195" r="12" fill="#FFD54F"/>
+                <circle cx="210" cy="195" r="12" fill="#FFD54F"/>
+                
+                <!-- Crown/Peel -->
+                <path d="M 150 85 Q 135 60 145 55 Q 150 60 150 55 Q 150 60 155 55 Q 165 60 150 85" fill="#8BC34A"/>
+                <circle cx="145" cy="58" r="4" fill="#FFD700"/>
+                <circle cx="150" cy="53" r="4" fill="#FFD700"/>
+                <circle cx="155" cy="58" r="4" fill="#FFD700"/>
+                
+                <!-- Energy aura -->
+                <circle cx="150" cy="165" r="80" fill="none" stroke="#FFD700" stroke-width="2" opacity="0.3"/>
+                <circle cx="150" cy="165" r="85" fill="none" stroke="#FFA500" stroke-width="1" opacity="0.2"/>
+                
+                <!-- Stage indicator -->
+                <text x="150" y="255" font-size="14" font-weight="bold" font-style="italic" text-anchor="middle" fill="#827717">⭐⭐⭐ Stage 2 - RARE</text>
+                
+                <!-- Type -->
+                <rect x="15" y="275" width="270" height="35" rx="8" fill="url(#holoGrad)"/>
+                <text x="30" y="297" font-size="14" font-weight="bold" fill="white">Type:</text>
+                <rect x="80" y="283" width="80" height="22" rx="11" fill="#8BC34A"/>
+                <text x="120" y="299" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Grass</text>
+                <rect x="170" y="283" width="80" height="22" rx="11" fill="#FFEB3B"/>
+                <text x="210" y="299" font-size="12" font-weight="bold" text-anchor="middle" fill="#827717">Food</text>
+                
+                <!-- Attack 1 -->
+                <rect x="15" y="320" width="270" height="40" rx="8" fill="#FFE082"/>
+                <text x="30" y="340" font-size="13" font-weight="bold" fill="#F57F17">⚡ Potassium Blast</text>
+                <circle cx="255" cy="335" r="15" fill="#F57F17"/>
+                <text x="255" y="341" font-size="14" font-weight="bold" text-anchor="middle" fill="white">80</text>
+                <text x="30" y="355" font-size="10" fill="#827717">Devastating energy blast!</text>
+                
+                <!-- Attack 2 -->
+                <rect x="15" y="365" width="270" height="30" rx="8" fill="#FFE082"/>
+                <text x="30" y="383" font-size="13" font-weight="bold" fill="#F57F17">🔥 Mega Split</text>
+                <circle cx="255" cy="380" r="15" fill="#D32F2F"/>
+                <text x="255" y="386" font-size="13" font-weight="bold" text-anchor="middle" fill="white">120</text>
+                
+                <!-- Footer -->
+                <text x="150" y="410" font-size="10" text-anchor="middle" fill="#827717">No. 003 • Length: 1.8m • Weight: 45kg</text>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>
