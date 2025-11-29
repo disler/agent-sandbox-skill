@@ -95,3 +95,12 @@ tmp/
 apps/sandbox_agent_working_dir/specs/
 
 adws/
+
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+*.pyz

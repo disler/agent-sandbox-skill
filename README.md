@@ -3,6 +3,8 @@
 An agent skill for managing isolated execution environments using [E2B Sandboxes](https://e2b.dev/). 
 This skill enables AI agents (Gemini CLI, Claude Code, Codex CLI) to safely execute code, build full-stack applications, and perform arbitrary engineering tasks in a secure, isolated sandbox.
 
+Watch the [Gemini 3 Demo](https://youtu.be/V5IhsHEHXOg) or the newer [Claude Opus 4.5](https://youtu.be/3kgx0YxCriM) Demo to understand what this codebase/skill can do for your agentic coding. 
+
 <img src="images/sandboxes.png" alt="Agent Sandboxes" width="800">
 
 ## Why Use Agent Sandboxes? The **Value Proposition**
@@ -101,6 +103,9 @@ Start with the Very Easy Prompts to get a feel for the tool. Keep in mind token 
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/easy_notes_app.md)" "easy_notes_app"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/easy_sqlite_crud.md)" "easy_sqlite_crud"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/easy_todo_list.md)" "easy_todo_list"
+\agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/easy_chart_sketch.md)" "easy_chart_sketch"
+\agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/easy_decision_matrix.md)" "easy_decision_matrix"
+\agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/easy_design_system_palette.md)" "easy_design_system_palette"
 ```
 
 ### Medium Prompts
@@ -111,11 +116,13 @@ Start with the Very Easy Prompts to get a feel for the tool. Keep in mind token 
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/gemini/medium_investment_tracker.md)" "medium_investment_tracker"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/gemini/medium_log_analysis_tool.md)" "medium_log_analysis_tool"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/gemini/medium_planning_poker.md)" "medium_planning_poker"
+\agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/opus45/medium_elevenlabs_live_transcription_app.md)" "medium_elevenlabs_live_transcription_app"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/medium_file_explorer.md)" "medium_file_explorer"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/medium_habit_tracker.md)" "medium_habit_tracker"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/medium_nano_banana_generator.md)" "medium_nano_banana_generator"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/medium_personal_finance.md)" "medium_personal_finance"
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/medium_recipe_planner.md)" "medium_recipe_planner"
+\agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/medium_chart_sketch_pro.md)" "medium_chart_sketch_pro"
 ```
 
 ### Hard Prompts
@@ -145,19 +152,38 @@ Start with the Very Easy Prompts to get a feel for the tool. Keep in mind token 
 \agent-sandboxes:plan-build-host-test "$(cat prompts/full_stack/sonnet/very_hard_system_monitor.md)" "very_hard_system_monitor"
 ```
 
+## 3 Browser Testing Prompts
+
+> after you host your app via public url, you can test it with the browser testing prompts.
+
+```bash
+# Claude Code only - requires subagent support (parallel=true, headed=true)
+/generic-browser-test https://www.anthropic.com/news/claude-opus-4-5 prompts/browser-workflows/opus-4-5-release.md true true
+
+# Sandbox app browser tests (replace <URL> with actual sandbox URL)
+/generic-browser-test <URL> prompts/browser-workflows/easy_chart_sketch_browser_test.md true true
+/generic-browser-test <URL> prompts/browser-workflows/easy_decision_matrix_browser_test.md true true
+/generic-browser-test <URL> prompts/browser-workflows/easy_design_system_palette_browser_test.md true true
+/generic-browser-test <URL> prompts/browser-workflows/medium_chart_sketch_pro_browser_test.md true true
+
+# For other agentic coding tools, make sure subagents is false
+\generic-browser-test <URL> prompts/browser-workflows/easy_chart_sketch_browser_test.md false true
+```
+
 ## 🤖 "Reprogrammed" BACKSLASH Commands
 
 This project uses "reprogrammed" backslash commands to trigger agent workflows.
 See [CLAUDE.md](CLAUDE.md), [AGENTS.md](AGENTS.md), and [GEMINI.md](GEMINI.md) for more details.
 
-| Command                                                        | Description                                                                      |
-| :------------------------------------------------------------- | :------------------------------------------------------------------------------- |
-| `\sandbox <prompt>`                                            | Small general sandbox operations. An adhoc prompt with minimal compute usage.    |
-| `\agent-sandboxes:plan-full-stack <prompt>`                    | Generates a detailed implementation plan.                                        |
-| `\agent-sandboxes:build <plan_path>`                           | Executes a build plan within a sandbox.                                          |
-| `\agent-sandboxes:host <sandbox_id> <port>`                    | Exposes a port and returns a public URL.                                         |
-| `\agent-sandboxes:test <sandbox_id> <url>`                     | Runs validation tests against the hosted app.                                    |
-| `\agent-sandboxes:plan-build-host-test <prompt> <workflow_id>` | **Agentic-Workflow**: Orchestrates a full lifecycle: Plan → Build → Host → Test. |
+| Command                                                                         | Description                                                                                  |
+| :------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------- |
+| `\sandbox <prompt>`                                                             | Small general sandbox operations. An adhoc prompt with minimal compute usage.                |
+| `\agent-sandboxes:plan-full-stack <prompt>`                                     | Generates a detailed implementation plan with Browser UI Testing workflows.                  |
+| `\agent-sandboxes:build <plan_path>`                                            | Executes a build plan within a sandbox.                                                      |
+| `\agent-sandboxes:host <sandbox_id> <port>`                                     | Exposes a port and returns a public URL.                                                     |
+| `\agent-sandboxes:test <sandbox_id> <url> <plan_path> <workflow_id>`            | Runs validation tests against the hosted app including browser UI testing.                   |
+| `\agent-sandboxes:browser-testing <sandbox_id> <url> <plan_path> <workflow_id>` | Executes browser UI testing workflows from a plan using parallel subagents (headed default). |
+| `\agent-sandboxes:plan-build-host-test <prompt> <workflow_id>`                  | **Agentic-Workflow**: Orchestrates a full lifecycle: Plan → Build → Host → Test.             |
 
 ## 💻 CLI Usage (Manual)
 

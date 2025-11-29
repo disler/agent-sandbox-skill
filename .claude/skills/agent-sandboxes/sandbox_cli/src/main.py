@@ -33,15 +33,14 @@ def cli():
     - Create, connect to, and manage sandboxes (sandbox)
     - Perform file operations with SDK APIs (files)
     - Execute any command with full control (exec)
+    - Browser automation for UI validation (browser)
 
     Most commands require a SANDBOX_ID. You can get one by:
     1. Creating a new sandbox: sbx init
     2. Or: sbx sandbox create
 
-    Tip: Export your sandbox ID for easier use:
-      export SANDBOX_ID=<your-sandbox-id>
-      sbx files ls $SANDBOX_ID /
-      sbx exec $SANDBOX_ID "python --version"
+    Tip: For multi-agent workflows, capture the sandbox ID in your context
+    and use it directly in commands (avoid shell variables for safety).
     """
     pass
 
@@ -70,19 +69,15 @@ def init(template, timeout, env, name):
     """
     Initialize a new sandbox and display the ID.
 
-    This is a convenience command that creates a sandbox and
-    saves the ID to a local .sandbox_id file.
+    Creates a new sandbox and outputs the sandbox ID. Capture the ID
+    from the output and store it in your context for subsequent commands.
 
     Templates:
-        You can create a sandbox from a custom template with pre-installed tools.
-        Use --template to specify a template name.
+        Use --template to specify a pre-built template with tools installed.
 
     Examples:
-        # Create with default base template
         sbx init
-
-        # Create with custom template and environment
-        sbx init --template agent-sandbox-dev-node22 --env API_KEY=secret --timeout 3600
+        sbx init --template fullstack-vue-fastapi-node22 --timeout 43200 --name my-workflow
     """
     try:
         from .modules import sandbox as sbx_module

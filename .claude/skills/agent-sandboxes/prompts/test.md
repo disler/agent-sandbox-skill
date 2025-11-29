@@ -1,7 +1,7 @@
 ---
 model: claude-sonnet-4-5-20250929
 description: Validate full-stack application (database, backend, frontend, integration) both internally and externally
-argument-hint: [sandbox_id] [public_url]
+argument-hint: [sandbox_id] [public_url] [plan_file_path] [workflow_id]
 ---
 
 # Purpose
@@ -12,15 +12,20 @@ Perform comprehensive testing and validation of a full-stack application running
 
 SANDBOX_ID: $1
 PUBLIC_URL: $2
+PLAN_FILE_PATH: $3
+WORKFLOW_ID: $4
+BROWSER_UI_TESTING_SCREENSHOT_PATH: `/temp/<WORKFLOW_ID>/ui-testing/`
 
 ## Instructions
 
 - CRITICAL: Both internal AND external validation must pass before reporting success
+- CRITICAL: `PLAN_FILE_PATH` is required - re-read the plan to execute Browser UI Testing workflows
 - If ANY test fails, debug and fix the issue before continuing
 - All three layers (frontend, backend, database) must be validated
 - DO NOT proceed to success report if tests fail
 - Test real endpoints and user flows, not just health checks
 - Verify data persists across the full stack
+- Browser UI Testing must execute ALL user story workflows from the plan's `### 7. Browser UI Testing` section
 
 ## Workflow
 
@@ -76,30 +81,11 @@ PUBLIC_URL: $2
    - Check browser console for errors (if accessible)
    - Validate the complete flow works from external access
 
-7. **Browser UI Validation (Visual Testing)**
-   - **IMPORTANT**: Change to `.claude/skills/agent-sandboxes/sandbox_cli/` directory for all browser commands
-   - **REQUIRED**: Generate unique port for this agent to avoid conflicts with parallel agents:
-     ```bash
-     BROWSER_PORT=$((9222 + $(echo -n "[SANDBOX_ID]" | cksum | cut -d' ' -f1) % 778))
-     # This generates a port between 9222-9999 based on sandbox ID
-     ```
-   - Start browser in headless mode (background, no window): `uv run sbx browser start --port $BROWSER_PORT`
-   - Navigate to application: `uv run sbx browser nav [PUBLIC_URL] --port $BROWSER_PORT`
-   - Take screenshot for validation: `uv run sbx browser screenshot --path /tmp/validation-[SANDBOX_ID].png --port $BROWSER_PORT`
-   - Verify critical UI elements are present (all commands MUST include --port):
-     - Page title: `uv run sbx browser eval "document.title" --port $BROWSER_PORT`
-     - Main heading: `uv run sbx browser eval "document.querySelector('h1')?.textContent" --port $BROWSER_PORT`
-     - Button count: `uv run sbx browser eval "document.querySelectorAll('button').length" --port $BROWSER_PORT`
-     - Input fields: `uv run sbx browser eval "document.querySelectorAll('input').length" --port $BROWSER_PORT`
-   - Check for JavaScript errors: `uv run sbx browser eval "window.onerror ? 'Has errors' : 'No errors'" --port $BROWSER_PORT`
-   - Verify page state: `uv run sbx browser eval "document.readyState" --port $BROWSER_PORT`
-   - Close browser: `uv run sbx browser close --port $BROWSER_PORT`
-   - **CRITICAL**: ALWAYS pass `--port $BROWSER_PORT` to EVERY browser command for multi-agent safety
-   - **Note**: Browser runs in headless mode (no window appears)
-   - **Note**: Each agent generates a unique port from sandbox ID, enabling parallel testing
-   - **Note**: If Playwright is not installed, install it first:
-     - `uv pip install playwright`
-     - `uv run playwright install chromium`
+7. **Browser UI Testing (Execute User Story Workflows from Plan)**
+   - Run `\agent-sandboxes:browser-testing [SANDBOX_ID] [PUBLIC_URL] [PLAN_FILE_PATH] [WORKFLOW_ID]`
+   - This executes all user story workflows from the plan's `### 7. Browser UI Testing` section
+   - Each workflow is executed top-to-bottom with error handling and screenshots
+   - All workflows must pass before proceeding
 
 8. **Error Resolution (If Tests Fail)**
    - DO NOT proceed if any test fails
@@ -177,15 +163,36 @@ Present validation results in this format:
 
 ---
 
-### ✅ Browser UI Validation (Visual Testing)
-- **Screenshot**: ✅ Saved to /tmp/validation-[SANDBOX_ID].png
-- **Page Title**: ✅ [actual title from browser eval]
-- **Main Heading (H1)**: ✅ [actual h1 text]
-- **Interactive Elements**: ✅ [N buttons, M inputs found]
-- **JavaScript Errors**: ✅ No errors detected
-- **Page State**: ✅ complete (fully loaded)
-- **Visual Appearance**: ✅ UI renders correctly (see screenshot)
-- **Status**: PASSED
+### ✅ Browser UI Testing (User Story Workflows from Plan)
+
+**Plan File**: `PLAN_FILE_PATH`
+
+For EACH `### User Story Workflow <N>: <Feature Name>` from the plan's `### 7. Browser UI Testing` section, report:
+
+#### User Story Workflow 1: [Feature Name from Plan]
+- **Description**: [one-sentence description from plan]
+- **Steps Executed**: [N] of [Total]
+- **Screenshot**: [BROWSER_UI_TESTING_SCREENSHOT_PATH]/[workflow-name]-success.png
+- **Status**: ✅ PASSED
+
+#### User Story Workflow 2: [Feature Name from Plan]
+- **Description**: [one-sentence description from plan]
+- **Steps Executed**: [N] of [Total]
+- **Screenshot**: [BROWSER_UI_TESTING_SCREENSHOT_PATH]/[workflow-name]-success.png
+- **Status**: ✅ PASSED
+
+<repeat for all workflows in the plan>
+
+**OR** (If a workflow failed and could not be resolved):
+
+#### User Story Workflow N: [Feature Name from Plan]
+- **Description**: [one-sentence description from plan]
+- **Failed At Step**: [step number and description]
+- **Error Screenshot**: [BROWSER_UI_TESTING_SCREENSHOT_PATH]/[workflow-name]-error.png
+- **Error Details**: [detailed error information]
+- **Resolution Attempted**: [what was tried to fix it]
+- **Why Unresolved**: [explanation of why the error could not be resolved]
+- **Status**: ❌ FAILED
 
 ---
 

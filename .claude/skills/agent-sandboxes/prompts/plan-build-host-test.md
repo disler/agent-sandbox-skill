@@ -30,10 +30,9 @@ SANDBOX_CLI_PATH: `temp/<WORKFLOW_ID>/`
 - **IMPORTANT**: DO NOT STOP in between steps. Complete every step in the workflow before stopping.
 - The sandbox will be initialized first, then the plan created locally, then the build happens in the sandbox, and finally the app is hosted
 - Capture the sandbox ID from step 1 to use in subsequent steps
-- Capture the plan file path from step 2 to pass to step 3
+- Capture the plan file path from step 2 to pass to step 3+
 - Capture the public URL from step 4 to report to the user
 - The host command will determine the appropriate port automatically
-- The sandbox will have a 1-hour timeout
 - IMPORTANT: You're operating in a sandbox, so unless you have to (download files) DO NOT create files locally. Always use the sandbox. 
 - IMPORTANT: You have FULL control over the sandbox, control it fully to get the job done.
 
@@ -50,7 +49,7 @@ SANDBOX_CLI_PATH: `temp/<WORKFLOW_ID>/`
 
 1. **Initialize Sandbox**
    - Change to SANDBOX_CLI_PATH directory
-   - Run `uv run sbx init --template fullstack-vue-fastapi-node22 --timeout 3600 --name [WORKFLOW_ID]` to create a new sandbox with the optimized template and 1-hour timeout
+   - Run `uv run sbx init --template fullstack-vue-fastapi-node22 --timeout 43200 --name [WORKFLOW_ID]` to create a new sandbox with the optimized template
    - The template includes: Node.js 22, uv, Vite 5.4.11, Vue 3, Pinia, TypeScript (all pre-configured and compatible)
    - This stores the WORKFLOW_ID in the sandbox metadata for tracking
    - Capture the sandbox ID from the output (format: `sbx_abc123def456`)
@@ -74,6 +73,7 @@ SANDBOX_CLI_PATH: `temp/<WORKFLOW_ID>/`
    - All validation commands from the plan are executed
    - Store the build completion status for reporting
    - IMPORTANT: Update the title of the html page your working on to begin with your `WORKFLOW_ID` so we can give you credit for your work.
+   - IMPORTANT: As you wrap up this step, be sure to document how to run the frontend, backend, and database in the README.md at the top of your application directory. This will tell future agents and engineers how to run your application. Keep it concise, describe the app, describe requirements, and describe the setup steps to run it, but don't get too verbose. Keep it less than 100 lines.
 
 4. **Host and Expose Application**
    - Run `\host [sandbox_id] [PORT]`
@@ -87,8 +87,9 @@ SANDBOX_CLI_PATH: `temp/<WORKFLOW_ID>/`
    - IMPORTANT: Be sure you run your final test from OUTSIDE the sandbox to validate the user's access to the application.
 
 5. **Final Testing & Validation**
-   - Run `\agent-sandboxes:test [sandbox_id] [public_url]`
-   - This performs comprehensive validation of database, backend (internal + external), frontend (internal + external), and end-to-end integration
+   - Run `\agent-sandboxes:test [sandbox_id] [public_url] [path_to_plan] [WORKFLOW_ID]`
+   - This performs comprehensive validation of database, backend (internal + external), frontend (internal + external), end-to-end integration, and browser UI testing
+   - Browser UI Testing executes all user story workflows from the plan's `### 7. Browser UI Testing` section
    - CRITICAL: All tests must pass before proceeding to report
    - If any test fails, the test command will provide specific debugging guidance
    - Re-run the test command after fixes until all validations pass
@@ -151,6 +152,7 @@ Provide a comprehensive workflow summary:
 **Backend**: ✅ All endpoints tested (internal + external), CORS configured
 **Frontend**: ✅ Build succeeded, page loads, assets served
 **Integration**: ✅ End-to-end user flow validated
+**Browser UI Testing**: ✅ All user story workflows from plan passed
 
 ---
 

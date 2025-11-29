@@ -50,11 +50,29 @@ uv run sbx files write <sandbox_id> /home/user/test.txt "Hello World"
 # Read a file (text)
 uv run sbx files read <sandbox_id> /home/user/test.txt
 
+# Edit a file (find and replace)
+uv run sbx files edit <sandbox_id> /home/user/config.ts --old "old text" --new "new text"
+
+# Edit with replace all
+uv run sbx files edit <sandbox_id> /home/user/config.ts --old "find" --new "replace" --all
+
 # Upload a file (binary support - images, PDFs, executables, etc.)
 uv run sbx files upload <sandbox_id> /path/to/local/image.png /home/user/image.png
 
 # Download a file (binary support)
 uv run sbx files download <sandbox_id> /home/user/output.pdf /path/to/local/output.pdf
+
+# Download entire directory (excludes .venv, node_modules, .git, etc. by default)
+uv run sbx files download-dir <sandbox_id> /home/user/project ./local/project
+
+# Download with all files (no exclusions)
+uv run sbx files download-dir <sandbox_id> /home/user/project ./local/project --all
+
+# Upload entire directory (excludes .venv, node_modules, .git, etc. by default)
+uv run sbx files upload-dir <sandbox_id> ./local/project /home/user/project
+
+# Upload with all files (no exclusions)
+uv run sbx files upload-dir <sandbox_id> ./local/project /home/user/project --all
 
 # Check if file exists
 uv run sbx files exists <sandbox_id> /home/user/test.txt
@@ -183,35 +201,106 @@ uv run sbx sandbox status <sandbox_id>
 # Pause sandbox (beta)
 uv run sbx sandbox pause <sandbox_id>
 
+# Extend sandbox lifetime (adds time to remaining)
+uv run sbx sandbox extend-lifetime <sandbox_id> 3600    # Add 1 hour
+uv run sbx sandbox extend-lifetime <sandbox_id> 10800   # Add 3 hours
+uv run sbx sandbox extend-lifetime <sandbox_id> 43200   # Add 12 hours
+
 # Kill sandbox (only if explicitly requested)
 uv run sbx sandbox kill <sandbox_id>
 ```
 
-**Note**: Sandboxes automatically terminate after 30 minutes. Only kill manually if explicitly requested.
+**Note**: Sandboxes automatically terminate after the configured timeout. Use `extend-lifetime` to keep them alive longer. Only kill manually if explicitly requested.
+
+### 7. Browser Automation
+
+Browser commands run on your **local machine** using Playwright's isolated Chromium (does not affect your Chrome browser).
+
+```bash
+# First-time setup (once per machine)
+uv run sbx browser init
+
+# Start browser (headless by default)
+uv run sbx browser start
+uv run sbx browser start --headed          # Show visible window
+uv run sbx browser start --port 9223       # Custom port for parallel agents
+
+# Navigate
+uv run sbx browser nav https://example.com
+
+# Execute JavaScript
+uv run sbx browser eval "document.title"
+uv run sbx browser eval "document.querySelectorAll('button').length"
+
+# Take screenshots
+uv run sbx browser screenshot --path screenshot.png
+uv run sbx browser screenshot --full       # Full page
+
+# Interact with page
+uv run sbx browser click "#submit-button"
+uv run sbx browser type "#username" "testuser"
+uv run sbx browser scroll down
+
+# Get page structure
+uv run sbx browser a11y                    # Accessibility tree (JSON)
+uv run sbx browser dom                     # Simplified DOM
+uv run sbx browser dom --full              # Raw HTML
+
+# Check status and close
+uv run sbx browser status
+uv run sbx browser close
+```
+
+**Multi-Agent Parallel Execution**: Use `--port` flag with unique ports (9222-9999):
+```bash
+# Agent 1
+uv run sbx browser start --port 9222
+uv run sbx browser nav https://app1.example.com --port 9222
+
+# Agent 2 (parallel)
+uv run sbx browser start --port 9223
+uv run sbx browser nav https://app2.example.com --port 9223
+```
+
+**Validating Sandbox Apps**:
+```bash
+# Get public URL from sandbox
+uv run sbx sandbox get-host <sandbox_id> --port 5173
+
+# Validate in browser
+uv run sbx browser start
+uv run sbx browser nav https://5173-<sandbox_id>.e2b.app
+uv run sbx browser eval "document.readyState"
+uv run sbx browser screenshot --path validation.png
+uv run sbx browser close
+```
 
 ## Command Structure
 
-The CLI is organized into **three core command groups**:
+The CLI is organized into **five command groups**:
 
 - **`sbx init`** - Quick sandbox initialization with template support
-- **`sbx sandbox`** - Sandbox lifecycle management (create, connect, kill, pause, info, status)
+- **`sbx sandbox`** - Sandbox lifecycle management (create, connect, kill, pause, extend-lifetime, info, status)
 - **`sbx files`** - File system operations using E2B SDK APIs (ls, read, write, upload, download, rm, mkdir, mv, exists, info)
 - **`sbx exec`** - Unified command execution with full control (all flags: --cwd, --user, --root, --shell, --env, --timeout, --background, --stdin)
+- **`sbx browser`** - Browser automation for UI validation (init, start, nav, eval, screenshot, click, type, scroll, close)
 
 ## Architecture
 
 ```
-apps/sandbox_cli/
+sandbox_cli/
    src/
       main.py              # Main CLI entry point
-      commands/            # CLI commands (one file per command group)
+      commands/            # CLI commands (thin wrappers)
          sandbox.py       # Sandbox lifecycle management
          files.py         # File operations using SDK APIs
          exec.py          # Unified command execution
+         browser.py       # Browser automation CLI
       modules/             # Reusable logic modules
           sandbox.py       # Sandbox connection management
           files.py         # File operation helpers
           commands.py      # Command execution helpers
+          browser.py       # Browser automation core logic
    pyproject.toml           # Project configuration
    README.md
 ```
@@ -244,7 +333,7 @@ File operations use E2B's SDK APIs instead of shell commands for:
 
 ## Features
 
-- **Sandbox Management**: Create, connect, pause, resume, and kill sandboxes
+- **Sandbox Management**: Create, connect, pause, resume, extend lifetime, and kill sandboxes
 - **File Operations**: Complete filesystem control with SDK APIs
   - Text file read/write
   - Binary file upload/download (images, PDFs, executables, etc.)

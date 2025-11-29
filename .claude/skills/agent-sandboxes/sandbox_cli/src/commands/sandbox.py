@@ -105,6 +105,11 @@ def kill(sandbox_id):
         raise click.Abort()
 
 
+def _build_default_public_url(sandbox_id: str, port: int = 5173) -> str:
+    """Build the default public URL for a sandbox."""
+    return f"https://{port}-{sandbox_id}.e2b.dev"
+
+
 @sandbox.command()
 @click.argument("sandbox_id")
 def info(sandbox_id):
@@ -119,13 +124,97 @@ def info(sandbox_id):
         table.add_column("Value", style="green")
 
         table.add_row("Sandbox ID", info["sandbox_id"])
+        table.add_row("Default Public URL", _build_default_public_url(info["sandbox_id"]))
         table.add_row("Template", info["template_id"])
+
+        # Display state with color
+        state = info.get("state", "unknown")
+        if state == "running":
+            table.add_row("State", "[green]Running[/green]")
+        elif state == "paused":
+            table.add_row("State", "[yellow]Paused[/yellow]")
+        else:
+            table.add_row("State", f"[dim]{state}[/dim]")
+
         table.add_row("Started At", info["started_at"])
+
+        # Only show expiration for running sandboxes
+        if state == "running" and info.get("end_at"):
+            table.add_row("Expires At", info["end_at"])
+            # Calculate time remaining
+            from datetime import datetime, timezone
+            try:
+                end_at = datetime.fromisoformat(info["end_at"])
+                now = datetime.now(timezone.utc)
+                remaining = end_at - now
+                total_mins = int(remaining.total_seconds() / 60)
+                if total_mins > 0:
+                    hours, mins = divmod(total_mins, 60)
+                    if hours > 0:
+                        table.add_row("Time Remaining", f"{hours}h {mins}m")
+                    else:
+                        table.add_row("Time Remaining", f"{mins}m")
+                else:
+                    table.add_row("Time Remaining", "[red]Expired[/red]")
+            except Exception:
+                pass
+        elif state == "paused":
+            table.add_row("Time Remaining", "[yellow]Paused (up to 30 days)[/yellow]")
 
         if info["metadata"]:
             table.add_row("Metadata", str(info["metadata"]))
 
         console.print(table)
+
+        # Get and display metrics
+        try:
+            metrics = sbx_module.get_sandbox_metrics(sandbox_id)
+            if metrics:
+                # Get the latest metric entry
+                latest = metrics[-1]
+
+                metrics_table = Table(title="Resource Metrics (Latest)")
+                metrics_table.add_column("Resource", style="cyan")
+                metrics_table.add_column("Used", style="yellow", justify="right")
+                metrics_table.add_column("Total", style="green", justify="right")
+                metrics_table.add_column("Usage", style="magenta", justify="right")
+
+                # CPU
+                cpu_pct = f"{latest['cpu_used_pct']:.1f}%"
+                metrics_table.add_row(
+                    "CPU",
+                    cpu_pct,
+                    f"{latest['cpu_count']} cores",
+                    cpu_pct,
+                )
+
+                # Memory - convert to human readable
+                mem_used_mb = latest["mem_used"] / (1024 * 1024)
+                mem_total_mb = latest["mem_total"] / (1024 * 1024)
+                mem_pct = (latest["mem_used"] / latest["mem_total"]) * 100 if latest["mem_total"] > 0 else 0
+                metrics_table.add_row(
+                    "Memory",
+                    f"{mem_used_mb:.1f} MB",
+                    f"{mem_total_mb:.1f} MB",
+                    f"{mem_pct:.1f}%",
+                )
+
+                # Disk - convert to human readable
+                disk_used_gb = latest["disk_used"] / (1024 * 1024 * 1024)
+                disk_total_gb = latest["disk_total"] / (1024 * 1024 * 1024)
+                disk_pct = (latest["disk_used"] / latest["disk_total"]) * 100 if latest["disk_total"] > 0 else 0
+                metrics_table.add_row(
+                    "Disk",
+                    f"{disk_used_gb:.2f} GB",
+                    f"{disk_total_gb:.2f} GB",
+                    f"{disk_pct:.1f}%",
+                )
+
+                console.print(metrics_table)
+            else:
+                console.print("[dim]Metrics not yet available (sandbox may have just started)[/dim]")
+        except Exception as metrics_err:
+            console.print(f"[dim]Could not fetch metrics: {metrics_err}[/dim]")
 
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
@@ -143,6 +232,48 @@ def pause(sandbox_id):
 
         console.print(f"[green]✓ Sandbox paused[/green]")
         console.print(f"[dim]Use 'connect' to resume[/dim]")
+
+    except Exception as e:
+        console.print(f"[red]✗ Error: {e}[/red]")
+        raise click.Abort()
+
+
+def _format_duration(seconds: int) -> str:
+    """Format seconds as human-readable duration."""
+    if seconds < 60:
+        return f"{seconds}s"
+    elif seconds < 3600:
+        mins = seconds // 60
+        return f"{mins}m"
+    else:
+        hours = seconds // 3600
+        mins = (seconds % 3600) // 60
+        if mins > 0:
+            return f"{hours}h {mins}m"
+        return f"{hours}h"
+
+
+@sandbox.command(name="extend-lifetime")
+@click.argument("sandbox_id")
+@click.argument("seconds", type=int)
+def extend_lifetime(sandbox_id, seconds):
+    """Extend sandbox lifetime by adding seconds to remaining time."""
+    try:
+        console.print(f"[yellow]Extending sandbox {sandbox_id} by {_format_duration(seconds)}...[/yellow]")
+
+        result = sbx_module.extend_sandbox_timeout(sandbox_id, seconds)
+
+        if result.get('hit_max_limit'):
+            console.print(f"[yellow]⚠ Hit 24-hour maximum limit![/yellow]")
+            console.print(f"[dim]Requested: {_format_duration(result['requested_remaining'])}[/dim]")
+            console.print(f"[dim]Actual: {_format_duration(result['new_remaining'])}[/dim]")
+            console.print(f"[dim]Max expiration: {result['max_end_at']}[/dim]")
+        else:
+            console.print(f"[green]✓ Sandbox lifetime extended[/green]")
+            console.print(f"[dim]Added: {_format_duration(result['added_seconds'])}[/dim]")
+            console.print(f"[dim]Previous remaining: {_format_duration(result['previous_remaining'])}[/dim]")
+            console.print(f"[dim]New remaining: {_format_duration(result['new_remaining'])}[/dim]")
+            console.print(f"[dim]New expiration: {result['new_end_at']}[/dim]")
 
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
@@ -202,16 +333,27 @@ def list(limit):
             console.print("[dim]No running sandboxes found[/dim]")
             return
 
-        table = Table(title=f"Running Sandboxes ({len(sandboxes)})")
+        table = Table(title=f"Sandboxes ({len(sandboxes)})")
         table.add_column("Sandbox ID", style="cyan", no_wrap=True)
+        table.add_column("Default Public URL", style="blue", no_wrap=True)
+        table.add_column("State", no_wrap=True)
         table.add_column("Template", style="green")
         table.add_column("Started At", style="yellow")
         table.add_column("Metadata", style="dim")
 
         for sbx in sandboxes:
             metadata_str = str(sbx["metadata"]) if sbx["metadata"] else "-"
+            state = sbx.get("state", "unknown")
+            if state == "running":
+                state_str = "[green]Running[/green]"
+            elif state == "paused":
+                state_str = "[yellow]Paused[/yellow]"
+            else:
+                state_str = f"[dim]{state}[/dim]"
             table.add_row(
                 sbx["sandbox_id"],
+                _build_default_public_url(sbx["sandbox_id"]),
+                state_str,
                 sbx["template_id"],
                 sbx["started_at"],
                 metadata_str,

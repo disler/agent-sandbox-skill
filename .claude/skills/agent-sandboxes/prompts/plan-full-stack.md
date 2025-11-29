@@ -14,6 +14,8 @@ FRONTEND_TOOLING: `vite vue-ts pinia` (static default)
 BACKEND_TOOLING: `astral uv python fast api` (static default)
 DATABASE_TOOLING: `sqlite` (static default)
 PLAN_OUTPUT_DIRECTORY: `<your temp directory>/specs/`
+BROWSER_UI_TESTING_STEPS_PER_WORKFLOW: 3-8 (static default)
+BROWSER_UI_TESTING_TOTAL_WORKFLOWS: 3-5 (static default)
 
 ## Instructions
 
@@ -29,6 +31,9 @@ PLAN_OUTPUT_DIRECTORY: `<your temp directory>/specs/`
 - Generate a descriptive, kebab-case filename based on the main topic of the plan.
 - Ensure the plan is detailed enough that another developer could follow it to implement the solution, including environment setup, scaffolding commands, and validation steps.
 - Consider edge cases, error handling, performance, and scalability concerns.
+- BROWSER_UI_TESTING_TOTAL_WORKFLOWS is the total number of user-story workflows to define for browser-based validation.
+- BROWSER_UI_TESTING_STEPS_PER_WORKFLOW is the number of UI interaction steps to define for each user-story workflow.
+- When writing `### 7. Browser UI Testing` section, be sure to craft the user-stories against the critical paths of the application. Focus on getting the 80/20 of the application working. The core of what was requested by the user.
 
 ## Workflow
 
@@ -38,7 +43,8 @@ PLAN_OUTPUT_DIRECTORY: `<your temp directory>/specs/`
 4. Design Solution - Develop architecture, API surface, data models, and UI composition; plan how layers communicate.
 5. Document Plan - Write the structured markdown with phases, tasks, dependencies, and testing across backend, frontend, database, and integrated flows.
 6. Generate Filename - Create a descriptive kebab-case filename based on the plan's main topic.
-7. Save & Report - Follow the `Report` section to write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md` and provide a summary of key components.
+7. Browser UI Testing - Define user-story workflows for browser-based validation. Each workflow should have BROWSER_UI_TESTING_STEPS_PER_WORKFLOW steps that validate ONE specific user feature through actual UI interactions.
+8. Save & Report - Follow the `Report` section to write the plan to `PLAN_OUTPUT_DIRECTORY/<filename>.md` and provide a summary of key components.
 
 ## Plan Format
 
@@ -122,15 +128,59 @@ IMPORTANT: Execute every step in order, top to bottom.
 - <frontend: component and integration tests (e.g., Vitest + Testing Library) hitting mocked or test APIs>
 - <full-system: end-to-end path that starts backend + frontend together and exercises primary user flows; include a command to run the app and smoke key routes>
 
-<continue with additional tasks as needed>
-
 <if task_type is feature or complexity is medium/complex, include this section:>
 ## Testing Strategy
 - Backend: <unit tests for services/models, integration tests for FastAPI routes with test DB, contract tests if shared types exist>
 - Database: <migration tests, data integrity checks, seed/fixture validation; rollback/forward verification>
 - Frontend: <component/unit tests, integration tests hitting stubbed API, visual checks for key screens>
-- Combined: <end-to-end tests that start backend + frontend (and DB) together; smoke tests proving the app runs; include commands to launch and verify health/primary user story>
 </if>
+
+### 7. Browser UI Testing
+
+Define `BROWSER_UI_TESTING_TOTAL_WORKFLOWS` total user-story workflows for browser-based validation. Each workflow validates ONE specific user feature through `BROWSER_UI_TESTING_STEPS_PER_WORKFLOW` UI interaction steps.
+
+<for each core user feature, create `BROWSER_UI_TESTING_TOTAL_WORKFLOWS` total workflows following this template:>
+
+### User Story Workflow <N>: <Feature Name>
+<one-sentence description of what this workflow validates>
+
+- [] Open public URL at `<url>`
+- [] <UI action: click, type, select, scroll, etc.>
+- [] <UI action>
+- [] <UI action - repeat BROWSER_UI_TESTING_STEPS_PER_WORKFLOW times>
+- [] CONFIRM: <expected visual/functional outcome>
+
+<example ui validation workflows - replace with actual features from the app:>
+
+### User Story Workflow 1: Create New Item
+Validates that a user can successfully create and see a new item in the list.
+
+- [] Open public URL at `https://5173-<sandbox_id>.e2b.app`
+- [] Click "Add New" button
+- [] Fill in the form fields (name, description)
+- [] Click "Save" button
+- [] CONFIRM: New item appears in the list with correct data
+
+### User Story Workflow 2: Edit Existing Item
+Validates that a user can modify an existing item.
+
+- [] Open public URL and locate an existing item
+- [] Click the "Edit" button on the item
+- [] Modify one or more fields
+- [] Click "Update" button
+- [] CONFIRM: Item displays updated values
+
+### User Story Workflow 3: Delete Item
+Validates that a user can remove an item.
+
+- [] Open public URL and locate an existing item
+- [] Click the "Delete" button
+- [] Confirm deletion in the modal/prompt
+- [] CONFIRM: Item is removed from the list
+
+<add additional workflows as needed based on the app's core features>
+
+</example ui validation workflows>
 
 ## Acceptance Criteria
 <list specific, measurable criteria that must be met for the task to be considered complete (running services, passing tests, defined APIs, working UI paths)>
@@ -161,4 +211,5 @@ Key Components:
 - <main component 1>
 - <main component 2>
 - <main component 3>
+- <number of user story workflows defined>
 ```

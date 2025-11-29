@@ -60,7 +60,7 @@ def read(sandbox_id, path):
         content = files_module.read_file(sandbox_id, path)
 
         console.print(f"\n[cyan]Content of {path}:[/cyan]")
-        console.print(content)
+        console.print(content, markup=False)
 
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
@@ -89,6 +89,33 @@ def write(sandbox_id, path, content, stdin):
 
         console.print(f"[green]✓ File written: {info['path']}[/green]")
 
+    except Exception as e:
+        console.print(f"[red]✗ Error: {e}[/red]")
+        raise click.Abort()
+
+
+@files.command()
+@click.argument("sandbox_id")
+@click.argument("path")
+@click.option("--old", required=True, help="String to find and replace")
+@click.option("--new", required=True, help="Replacement string")
+@click.option("--all", "replace_all", is_flag=True, help="Replace all occurrences (default: first only)")
+def edit(sandbox_id, path, old, new, replace_all):
+    """Edit a file by replacing a string."""
+    try:
+        console.print(f"[yellow]Editing {path}...[/yellow]")
+
+        result = files_module.edit_file(sandbox_id, path, old, new, replace_all)
+
+        console.print(f"[green]✓ File edited: {result['path']}[/green]")
+        if result['total_occurrences'] > 1:
+            console.print(f"[dim]Replaced {result['replacements']} of {result['total_occurrences']} occurrences[/dim]")
+        else:
+            console.print(f"[dim]Replaced {result['replacements']} occurrence[/dim]")
+
+    except ValueError as e:
+        console.print(f"[red]✗ {e}[/red]")
+        raise click.Abort()
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
         raise click.Abort()
@@ -249,6 +276,83 @@ def download(sandbox_id, remote_path, local_path):
         console.print(f"[green]✓ File downloaded: {local_path}[/green]")
         console.print(f"[dim]Size: {file_size} bytes[/dim]")
 
+    except Exception as e:
+        console.print(f"[red]✗ Error: {e}[/red]")
+        raise click.Abort()
+
+
+# Shared implementation for directory operations
+def _download_directory_impl(sandbox_id, remote_path, local_path, max_depth, exclude, include_all):
+    """Shared implementation for download-dir and download-app commands."""
+    console.print(f"[yellow]Downloading {remote_path} to {local_path}...[/yellow]")
+    if not include_all:
+        console.print("[dim]Excluding: .venv, node_modules, .git, __pycache__, etc.[/dim]")
+
+    stats = files_module.download_directory(
+        sandbox_id, remote_path, local_path,
+        max_depth=max_depth,
+        exclude=list(exclude) if exclude else None,
+        include_all=include_all,
+    )
+
+    console.print(f"[green]✓ Download complete![/green]")
+    console.print(f"[dim]Files: {stats['files_downloaded']} | Dirs: {stats['directories_created']} | Size: {stats['total_bytes']:,} bytes[/dim]")
+    if stats["skipped_dirs"]:
+        console.print(f"[dim]Skipped: {len(stats['skipped_dirs'])} directories[/dim]")
+    if stats["errors"]:
+        console.print(f"[yellow]⚠ Errors: {len(stats['errors'])}[/yellow]")
+    return stats
+
+
+def _upload_directory_impl(sandbox_id, local_path, remote_path, max_depth, exclude, include_all):
+    """Shared implementation for upload-dir and upload-app commands."""
+    console.print(f"[yellow]Uploading {local_path} to {remote_path}...[/yellow]")
+    if not include_all:
+        console.print("[dim]Excluding: .venv, node_modules, .git, __pycache__, etc.[/dim]")
+
+    stats = files_module.upload_directory(
+        sandbox_id, local_path, remote_path,
+        max_depth=max_depth,
+        exclude=list(exclude) if exclude else None,
+        include_all=include_all,
+    )
+
+    console.print(f"[green]✓ Upload complete![/green]")
+    console.print(f"[dim]Files: {stats['files_uploaded']} | Dirs: {stats['directories_created']} | Size: {stats['total_bytes']:,} bytes[/dim]")
+    if stats["skipped_dirs"]:
+        console.print(f"[dim]Skipped: {len(stats['skipped_dirs'])} directories[/dim]")
+    if stats["errors"]:
+        console.print(f"[yellow]⚠ Errors: {len(stats['errors'])}[/yellow]")
+    return stats
+
+
+@files.command(name="download-dir")
+@click.argument("sandbox_id")
+@click.argument("remote_path")
+@click.argument("local_path")
+@click.option("--max-depth", "-d", default=10, help="Max directory depth")
+@click.option("--exclude", "-e", multiple=True, help="Additional dirs to exclude")
+@click.option("--all", "include_all", is_flag=True, help="Include all (no exclusions)")
+def download_dir(sandbox_id, remote_path, local_path, max_depth, exclude, include_all):
+    """Download a directory recursively from the sandbox."""
+    try:
+        _download_directory_impl(sandbox_id, remote_path, local_path, max_depth, exclude, include_all)
+    except Exception as e:
+        console.print(f"[red]✗ Error: {e}[/red]")
+        raise click.Abort()
+
+
+@files.command(name="upload-dir")
+@click.argument("sandbox_id")
+@click.argument("local_path")
+@click.argument("remote_path")
+@click.option("--max-depth", "-d", default=10, help="Max directory depth")
+@click.option("--exclude", "-e", multiple=True, help="Additional dirs to exclude")
+@click.option("--all", "include_all", is_flag=True, help="Include all (no exclusions)")
+def upload_dir(sandbox_id, local_path, remote_path, max_depth, exclude, include_all):
+    """Upload a directory recursively to the sandbox."""
+    try:
+        _upload_directory_impl(sandbox_id, local_path, remote_path, max_depth, exclude, include_all)
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
         raise click.Abort()

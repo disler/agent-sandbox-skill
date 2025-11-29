@@ -9,9 +9,10 @@ This skill provides access to E2B sandboxes through a streamlined CLI for safe c
 
 ## Variables
 
-- **E2B API Key**: Required environment variable `E2B_API_KEY`
-- **Sandbox CLI Location**: `.claude/skills/agent-sandboxes/sandbox_cli/`
-- **Environment File**: Root `.env` file (automatically loaded)
+- **E2B_API_KEY**: The environment variable containing the E2B API key (stored in the environment file)
+- **SANDBOX_CLI_PATH**: `.claude/skills/agent-sandboxes/sandbox_cli/`
+- **ENVIRONMENT_FILE_PATH**: `../../../../.env`
+- **TIMEOUT_DURATION_IN_SECONDS**: `43200` (12 hours)
 
 ## Prerequisites
 
@@ -20,7 +21,7 @@ Before using sandbox operations, **validate the environment**:
 1. **Check for E2B_API_KEY**:
    ```bash
    # Verify the API key is set
-   grep "E2B_API_KEY" .env
+   grep "E2B_API_KEY" `ENVIRONMENT_FILE_PATH`
    ```
 
    If missing, instruct the user:
@@ -34,12 +35,35 @@ Before using sandbox operations, **validate the environment**:
    ```
 
 2. **Verify CLI is available**:
-   The sandbox CLI is located at `.claude/skills/agent-sandboxes/sandbox_cli/`
+   The sandbox CLI is located at `SANDBOX_CLI_PATH`
    The `.env` file is automatically loaded from the project root.
 
 ## Instructions
 
-- IMPORTANT: Don't create files locally, always use the sandbox. Only do this if the user explicitly asks you to do so.
+- IMPORTANT: **Don't create files locally**, always use the sandbox. Only do this if the user explicitly asks you to do so.
+- **ALWAYS USE --timeout TIMEOUT_DURATION_IN_SECONDS**
+- **CAPTURE AND REMEMBER SANDBOX ID** - Store it in your context, don't use shell variables or files
+- **Multi-agent safe** - Each agent tracks its own sandbox ID independently
+- **Always validate E2B_API_KEY first** - Don't proceed without it
+- **Change directory to SANDBOX_CLI_PATH** - All commands must be run from there
+- **Use --shell for complex commands** - Enables pipes, redirections, wildcards
+- **Use --cwd instead of cd** - More reliable for working directory changes
+- **Binary files** - Use `upload`/`download` for images, PDFs, executables
+- **Never delete the sandbox unless you're explicitly asked to do so** - Sandboxes auto-timeout after TIMEOUT_DURATION_IN_SECONDS
+
+### Template Tiers
+
+Pre-built templates with different resource levels. Use `--template` flag with `sbx init`:
+
+| Template | vCPU | RAM | Cost | Best For |
+|----------|------|-----|------|----------|
+| `fullstack-vue-fastapi-node22` | 2 | 2GB | $0.13/hr | Simple apps (default) |
+| `fullstack-vue-fastapi-node22-lite` | 2 | 4GB | $0.15/hr | Browser tests |
+| `fullstack-vue-fastapi-node22-standard` | 4 | 4GB | $0.27/hr | Parallel builds |
+| `fullstack-vue-fastapi-node22-heavy` | 4 | 8GB | $0.33/hr | Multi-browser |
+| `fullstack-vue-fastapi-node22-max` | 8 | 8GB | $0.44/hr | Fastest |
+
+Build new templates: `uv run build_template.py --tier <tier>` or `--list-tiers` to see options.
 
 ### When to Use Sandboxes
 
@@ -57,14 +81,14 @@ Use agent sandboxes when the user needs to:
 The sandbox CLI has **four core command groups**:
 
 1. **`sbx init`** - Quick sandbox initialization
-2. **`sbx sandbox`** - Lifecycle management (create, connect, kill, pause, info)
+2. **`sbx sandbox`** - Lifecycle management (create, connect, kill, pause, extend-lifetime, info)
 3. **`sbx files`** - File operations (ls, read, write, upload, download, rm, mkdir, mv)
 4. **`sbx exec`** - Unified command execution (the most powerful command)
 5. **`sbx browser`** - Browser automation for UI validation (visual testing)
 
 **Get CLI Help**: Use `sbx --help` to see all available commands and options:
 ```bash
-cd .claude/skills/agent-sandboxes/sandbox_cli
+cd SANDBOX_CLI_PATH
 uv run sbx --help           # Main help
 uv run sbx init --help      # Help for init command
 uv run sbx sandbox --help   # Help for sandbox commands
@@ -88,104 +112,35 @@ Options:
   --background        Run command in background
 ```
 
-**Important**: All commands must be run from `.claude/skills/agent-sandboxes/sandbox_cli/` directory.
+**Important**: All commands must be run from `SANDBOX_CLI_PATH` directory.
 
 ### Key Command: `sbx browser`
 
-The `browser` command provides visual validation tools for sandbox applications using **Playwright's isolated Chromium**. This does NOT interfere with your Chrome browser - you can use Chrome normally while agents run their own Chromium instances.
+Browser automation for visual validation of sandbox applications using Playwright's isolated Chromium.
 
+**Commands** (all support `--port PORT` for parallel agents):
 ```bash
-uv run sbx browser <subcommand> [options]
-
-Subcommands:
-  start               Start Playwright Chromium with remote debugging
-  nav URL            Navigate to a URL
-  screenshot         Take a screenshot of the current page
-  eval CODE          Execute JavaScript in the page
-  pick MESSAGE       Interactive element picker
-  cookies            Get all cookies as JSON
-  status             Check browser connection status
-  close              Close the browser
+sbx browser init                        # First-time setup (once per machine)
+sbx browser start [--headed]            # Start browser (--headed shows window)
+sbx browser nav <url>                   # Navigate to URL
+sbx browser eval <code>                 # Run JavaScript, returns result
+sbx browser screenshot [--path P] [--full]  # Screenshot (--full for entire page)
+sbx browser click <selector>            # Click element by CSS selector
+sbx browser type <selector> <text>      # Type text into input field
+sbx browser scroll <direction>          # up | down | top | bottom
+sbx browser a11y                        # Get accessibility tree (JSON)
+sbx browser dom [--full]                # Get DOM (--full for raw HTML)
+sbx browser status                      # Check if browser is running
+sbx browser close                       # Close browser and kill process
 ```
 
-**Browser Workflow**:
-```bash
-# 1. Start Playwright Chromium in headless mode (no window, background only)
-uv run sbx browser start
+**For parallel agents**: Use `--port` flag with unique ports (9222-9999).
 
-# 2. Navigate to your sandbox app
-uv run sbx browser nav https://5173-sbx_abc123.e2b.app
-
-# 3. Validate visually
-uv run sbx browser screenshot --path validation.png
-
-# 4. Check JavaScript state
-uv run sbx browser eval "document.title"
-uv run sbx browser eval "Array.from(document.querySelectorAll('button')).map(b => b.textContent)"
-
-# 5. Interactive inspection (optional, requires --headed mode)
-uv run sbx browser pick "Click the submit button"
-
-# 6. Close when done
-uv run sbx browser close
-```
-
-**Headless vs Headed Mode**:
-```bash
-# Headless (default) - runs in background, no window
-uv run sbx browser start
-
-# Headed - shows browser window (useful for debugging)
-uv run sbx browser start --headed
-```
-
-**Prerequisites**:
-- Playwright must be installed: `uv pip install playwright`
-- Install Playwright's Chromium: `uv run playwright install chromium`
-- **NOTE**: Uses Playwright's isolated Chromium (NOT your system Chrome)
-
-**Common Validation Patterns**:
-
-1. **Check page loads**:
-   ```bash
-   uv run sbx browser nav <public_url>
-   uv run sbx browser eval "document.readyState"
-   ```
-
-2. **Verify UI elements**:
-   ```bash
-   uv run sbx browser eval "document.querySelectorAll('button').length"
-   uv run sbx browser eval "document.querySelector('h1')?.textContent"
-   ```
-
-3. **Check for JavaScript errors**:
-   ```bash
-   uv run sbx browser eval "window.onerror ? 'Has errors' : 'No errors'"
-   ```
-
-4. **Visual regression**:
-   ```bash
-   uv run sbx browser screenshot --full --path before.png
-   # Make changes...
-   uv run sbx browser screenshot --full --path after.png
-   ```
-
-**Important**:
-- Browser commands run on YOUR local machine, not in the sandbox
-- Uses **Playwright's isolated Chromium** - does NOT interfere with your Chrome browser
-- You can use Chrome normally while agents have their own Chromium instances
-- Use these to validate public URLs from sandboxes (after using `get-host`)
-- **Runs in headless mode by default** - no browser window appears (background only)
-- The browser persists across commands until you `close` it
-- **Multiple agents CAN run browsers in parallel** using different ports
-- If port 9222 is in use, the CLI will suggest trying a different port (e.g., `--port 9223`)
-- All browser commands support the `--port` option for parallel execution
-
-## Multi-Agent Considerations
+### Multi-Agent Considerations
 
 **CRITICAL**: Multiple agents may be running sandboxes simultaneously. Each agent MUST:
 
-1. **Always use a minimum timeout of `--timeout 1800`** when initializing (30-minute default lifetime) (unless the user specifies a different timeout)
+1. **Always use `--timeout TIMEOUT_DURATION_IN_SECONDS`** when initializing (unless the user specifies a different timeout)
 2. **Capture the sandbox ID** from `sbx init` output and remember it in your context
 3. **DO NOT use shell variables** like `export SANDBOX_ID=...` (conflicts with other agents)
 4. **DO NOT rely on `.sandbox_id` file** (gets overwritten by other agents)
@@ -205,6 +160,15 @@ uv run sbx exec sbx_abc123def456 "python --version"
 uv run sbx files write sbx_abc123def456 /home/user/test.py "print('hello')"
 ```
 
+## Cookbook
+
+Extended documentation for specific features. **Read these when you need to use the feature.**
+
+| Feature            | When to Read                                                           | Documentation                              |
+| ------------------ | ---------------------------------------------------------------------- | ------------------------------------------ |
+| Browser Automation | When validating UIs, taking screenshots, or interacting with web pages | [cookbook/browser.md](cookbook/browser.md) |
+
+
 ## Workflow
 
 ### Step 1: Validate Environment
@@ -212,23 +176,23 @@ uv run sbx files write sbx_abc123def456 /home/user/test.py "print('hello')"
 Always start by checking for the E2B_API_KEY:
 
 ```bash
-cd .claude/skills/agent-sandboxes/sandbox_cli
-grep "E2B_API_KEY" ../../../../.env
+cd SANDBOX_CLI_PATH
+grep "E2B_API_KEY" `ENVIRONMENT_FILE_PATH`
 ```
 
 If not found, stop and request the user to add their API key.
 
 ### Step 2: Initialize Sandbox and Capture ID
 
-Create a new sandbox with a **30-minute lifetime** and **capture the sandbox ID from the output**:
+Create a new sandbox and **capture the sandbox ID from the output**:
 
 ```bash
-cd .claude/skills/agent-sandboxes/sandbox_cli
-uv run sbx init --timeout 1800
+cd SANDBOX_CLI_PATH
+uv run sbx init --timeout TIMEOUT_DURATION_IN_SECONDS
 ```
 
 **CRITICAL**:
-- **Always use `--timeout 1800`** (30 minutes) - this is the default lifetime for all sandboxes
+- **Always use `--timeout TIMEOUT_DURATION_IN_SECONDS`**
 - The command will output a sandbox ID (e.g., `sbx_abc123def456`)
 - **Capture this ID** and remember it in your context
 - **DO NOT use environment variables** or files to store it
@@ -240,10 +204,9 @@ Additional options (optional):
 
 Example:
 ```bash
-uv run sbx init --timeout 1800
+uv run sbx init --timeout TIMEOUT_DURATION_IN_SECONDS
 # Output: Created sandbox: sbx_abc123def456
 # YOU remember: sandbox_id = "sbx_abc123def456"
-# Sandbox will automatically terminate after 30 minutes
 ```
 
 ### Step 3: Perform Operations
@@ -261,6 +224,17 @@ uv run sbx exec <sandbox_id> "pip list" --cwd /home/user/project
 uv run sbx files write <sandbox_id> /home/user/script.py "print('hello')"
 uv run sbx files read <sandbox_id> /home/user/output.txt
 uv run sbx files upload <sandbox_id> ./local.png /home/user/image.png
+uv run sbx files edit <sandbox_id> /home/user/config.ts --old "old text" --new "new text"
+uv run sbx files edit <sandbox_id> /home/user/config.ts --old "find" --new "replace" --all
+```
+
+**Download directories** (clone sandbox code locally):
+```bash
+# Download directory (excludes .venv, node_modules, .git, __pycache__ by default)
+uv run sbx files download-dir <sandbox_id> /home/user/project ./local/project
+
+# Include everything (no exclusions)
+uv run sbx files download-dir <sandbox_id> /home/user/project ./local/project --all
 ```
 
 **IMPORTANT - Writing Files with Special Characters**:
@@ -379,7 +353,38 @@ curl https://5173-<sandbox_id>.e2b.app
 **Important**:
 - The server must listen on `0.0.0.0` (not `localhost` or `127.0.0.1`)
 - Port must match between server and frontend configuration
-- The sandbox will remain alive for 30 minutes (auto-timeout)
+- The sandbox will remain alive until TIMEOUT_DURATION_IN_SECONDS
+
+### Pausing, Resuming, and Extending Sandboxes
+
+**Pause a sandbox** (beta feature):
+```bash
+uv run sbx sandbox pause <sandbox_id>
+```
+
+**Resume a paused sandbox** (use `connect`):
+```bash
+uv run sbx sandbox connect <sandbox_id>
+```
+
+**Extend sandbox lifetime** (adds time to remaining):
+```bash
+uv run sbx sandbox extend-lifetime <sandbox_id> <seconds_to_add>
+```
+
+Examples:
+```bash
+# Add 1 hour to remaining time
+uv run sbx sandbox extend-lifetime <sandbox_id> 3600
+
+# Add 3 hours
+uv run sbx sandbox extend-lifetime <sandbox_id> 10800
+
+# Add 12 hours
+uv run sbx sandbox extend-lifetime <sandbox_id> 43200
+```
+
+The `extend-lifetime` command **adds** the specified seconds to the remaining lifetime. If a sandbox has 30m left and you add 1h, it will have 1h 30m remaining.
 
 ### Step 5: Report Results
 
@@ -401,7 +406,7 @@ This returns the actual URL (e.g., `https://5173-<sandbox_id>.e2b.app`).
 Provide the user with:
 1. **The sandbox ID** - So they can reference it if needed
 2. **The URL** (if applicable) - So they can access the application
-3. **Timeout information** - Let them know it will auto-terminate in 30 minutes
+3. **Timeout information** - Let them know the sandbox timeout (TIMEOUT_DURATION_IN_SECONDS)
 
 Example report:
 ```
@@ -410,14 +415,14 @@ Example report:
 Sandbox ID: sbx_abc123def456
 Application URL: [Use: uv run sbx sandbox get-host sbx_abc123def456 --port 5173]
 
-Your sandbox will automatically terminate in 30 minutes.
+Your sandbox will automatically terminate after TIMEOUT_DURATION_IN_SECONDS.
 ```
 
 **Note**: Always get the actual URL using `sbx sandbox get-host <sandbox_id> --port 5173` - never construct it manually.
 
 **IMPORTANT**:
 - **Never delete the sandbox unless you're explicitly asked to do so**
-- Sandboxes will automatically timeout after 30 minutes
+- Sandboxes will automatically timeout after TIMEOUT_DURATION_IN_SECONDS
 
 ## Examples
 
@@ -453,30 +458,18 @@ Covers: Binary file upload/download, image processing, using appropriate file op
 
 Covers: Exposing frontends, using port 5173, starting servers in background, getting public URLs, keeping sandboxes alive.
 
-## Important Notes
-
-1. **ALWAYS USE --timeout 1800** - Every sandbox should have a 30-minute lifetime
-2. **CAPTURE AND REMEMBER SANDBOX ID** - Store it in your context, don't use shell variables or files
-3. **Multi-agent safe** - Each agent tracks its own sandbox ID independently
-4. **Always validate E2B_API_KEY first** - Don't proceed without it
-5. **Change directory to sandbox_cli** - All commands must be run from there
-6. **Use --shell for complex commands** - Enables pipes, redirections, wildcards
-7. **Use --cwd instead of cd** - More reliable for working directory changes
-8. **Binary files** - Use `upload`/`download` for images, PDFs, executables
-9. **Never delete the sandbox unless you're explicitly asked to do so** - Sandboxes auto-timeout after 30 minutes
-
 ## Reference
 
 **Built-in CLI Help**:
 ```bash
-cd .claude/skills/agent-sandboxes/sandbox_cli
+cd SANDBOX_CLI_PATH
 uv run sbx --help       # Overview of all commands
 uv run sbx <command> --help  # Detailed help for specific command
 ```
 
 For complete command reference and advanced usage, see:
 - **CLI Help**: Run `uv run sbx --help` for interactive command reference
-- **Full documentation**: `.claude/skills/agent-sandboxes/sandbox_cli/README.md`
+- **Full documentation**: `SANDBOX_CLI_PATH/README.md`
 - **Architecture details**: Command groups, modules, and design principles
 - **Advanced examples**: Multi-step workflows, git operations, package management
 
@@ -507,3 +500,5 @@ For complete command reference and advanced usage, see:
 **"Forgot command syntax"**:
 - Use `uv run sbx --help` to see command structure
 - Each command group has detailed help with examples
+
+**Browser issues**: See [cookbook/browser.md](cookbook/browser.md) for troubleshooting.

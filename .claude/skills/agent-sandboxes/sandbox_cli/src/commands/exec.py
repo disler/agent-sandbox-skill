@@ -108,11 +108,11 @@ def exec(sandbox_id, command, cwd, user, root, shell, env, timeout, background, 
 
         if result["stdout"]:
             console.print("\n[green]STDOUT:[/green]")
-            console.print(result["stdout"])
+            console.print(result["stdout"], markup=False)
 
         if result["stderr"]:
             console.print("\n[red]STDERR:[/red]")
-            console.print(result["stderr"])
+            console.print(result["stderr"], markup=False)
 
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
